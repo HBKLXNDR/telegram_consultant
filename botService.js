@@ -30,11 +30,27 @@ class TelegramBotService {
         this.bot.onText(/\/contact/, this.handleContactCommand.bind(this));
         this.bot.onText(/\/form/, this.handleFormCommand.bind(this));
         this.bot.onText(/\/shop/, this.handleShopCommand.bind(this));
+
+        // Add callback query handler for inline buttons
+        this.bot.on('callback_query', this.handleCallbackQuery.bind(this));
     }
 
     async handleMessage(msg) {
         const chatId = msg.chat.id;
         const text = msg.text;
+
+        // Handle text-based button clicks
+        switch(text) {
+            case '📋 Наші послуги':
+                await this.handleServicesCommand(msg);
+                break;
+            case '💰 Прайс-лист':
+                await this.handlePricesCommand(msg);
+                break;
+            case '📞 Зв\'язатися з нами':
+                await this.handleContactCommand(msg);
+                break;
+        }
 
         if (text === '/start') {
             await this.sendStartMessage(chatId);
@@ -44,6 +60,33 @@ class TelegramBotService {
             await this.handleWebAppData(msg);
         }
     }
+
+    async handleCallbackQuery(callbackQuery) {
+        const chatId = callbackQuery.message.chat.id;
+        const data = callbackQuery.data;
+
+        try {
+            switch(data) {
+                case '/services':
+                    await this.handleServicesCommand({ chat: { id: chatId }});
+                    break;
+                case '/prices':
+                    await this.handlePricesCommand({ chat: { id: chatId }});
+                    break;
+                case '/contact':
+                    await this.handleContactCommand({ chat: { id: chatId }});
+                    break;
+                case '/portfolio':
+                    await this.handlePortfolioCommand({ chat: { id: chatId }});
+                    break;
+            }
+            // Answer the callback query to remove the loading state
+            await this.bot.answerCallbackQuery(callbackQuery.id);
+        } catch (error) {
+            logger.error('Error handling callback query:', { error, chatId, data });
+        }
+    }
+
 
     async handleHelpCommand(msg) {
         const chatId = msg.chat.id;
@@ -106,17 +149,30 @@ class TelegramBotService {
         const chatId = msg.chat.id;
         try {
             await this.bot.sendMessage(chatId,
-                'Зв\'яжіться з нами:\n\n' +
-                '📞 Телефон: +380123456789\n' +
-                '📧 Email: contact@example.com\n' +
-                '🌐 Сайт: ' + CONFIG.HOMEPAGE_URL + '\n' +
-                '📱 Telegram: @support_manager',
+                '📞 *Наші контакти:*\n\n' +
+                '🔹 *Телефон:* +380123456789\n' +
+                '🔹 *Email:* contact@example.com\n' +
+                '🔹 *Telegram:* @support_manager\n' +
+                '🔹 *Веб-сайт:* ' + CONFIG.HOMEPAGE_URL + '\n\n' +
+                '⏰ *Графік роботи:*\n' +
+                'Пн-Пт: 9:00 - 18:00\n' +
+                'Сб-Нд: Вихідний\n\n' +
+                '💬 Оберіть зручний спосіб зв\'язку:',
                 {
+                    parse_mode: 'Markdown',
                     reply_markup: {
-                        inline_keyboard: [[
-                            { text: '📞 Зателефонувати', url: 'tel:+380123456789' },
-                            { text: '📧 Написати', url: 'mailto:contact@example.com' }
-                        ]]
+                        inline_keyboard: [
+                            [
+                                { text: '📞 Зателефонувати', url: 'tel:+380123456789' },
+                                { text: '📧 Написати на Email', url: 'mailto:contact@example.com' }
+                            ],
+                            [
+                                { text: '💬 Написати в Telegram', url: 'https://t.me/support_manager' }
+                            ],
+                            [
+                                { text: '🔙 Головне меню', callback_data: '/start' }
+                            ]
+                        ]
                     }
                 }
             );
@@ -124,6 +180,7 @@ class TelegramBotService {
             logger.error('Error sending contact message:', { error, chatId });
         }
     }
+
 
     async handleFormCommand(msg) {
         const chatId = msg.chat.id;
@@ -168,20 +225,20 @@ class TelegramBotService {
                 'Що б ви хотіли зробити?',
                 {
                     reply_markup: {
-                        keyboard: [
+                        inline_keyboard: [
                             [
-                                { text: 'Замовити сайт', web_app: { url: this.webAppUrl } },
-                                { text: 'Залишити заявку', web_app: { url: `${this.webAppUrl}/form` } }
+                                { text: '🌐 Замовити сайт', web_app: { url: this.webAppUrl } },
+                                { text: '📝 Залишити заявку', web_app: { url: `${this.webAppUrl}/form` } }
                             ],
                             [
                                 { text: '📋 Наші послуги', callback_data: '/services' },
                                 { text: '💰 Прайс-лист', callback_data: '/prices' }
                             ],
                             [
-                                { text: '📞 Зв\'язатися з нами', callback_data: '/contact' }
+                                { text: '📞 Зв\'язатися з нами', callback_data: '/contact' },
+                                { text: '🎯 Портфоліо', callback_data: '/portfolio' }
                             ]
-                        ],
-                        resize_keyboard: true
+                        ]
                     }
                 }
             );
@@ -194,6 +251,7 @@ class TelegramBotService {
             });
         }
     }
+
 
     async handleWebAppData(msg) {
         const chatId = msg.chat.id;
@@ -271,6 +329,10 @@ class TelegramBotService {
 
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async handleStartCallback(chatId) {
+        await this.sendStartMessage(chatId);
     }
 }
 
