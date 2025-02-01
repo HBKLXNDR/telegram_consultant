@@ -11,3 +11,6 @@
 /dataSources.local.xml
 
 /.env
+
+/logs/
+/package-lock.json/
