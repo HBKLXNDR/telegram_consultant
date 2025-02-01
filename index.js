@@ -18,6 +18,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 try {
+    // Create an instance of the App class
     const app = new App();
     app.start();
 } catch (error) {
