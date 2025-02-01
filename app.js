@@ -97,9 +97,8 @@ class App {
         res.status(200).json({
             message: 'Welcome to the Telegram Bot API!',
             version: '1.0.0',
-            documentation: '/docs',
-            homepage: CONFIG.HOMEPAGE_URL,
-            webAppUrl: CONFIG.WEB_APP_URL
+            status: 200,
+            endpoint: '/'
         });
     }
 
