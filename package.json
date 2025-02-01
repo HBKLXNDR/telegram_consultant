@@ -1,0 +1,11 @@
+{
+  "name": "telegram_consultant",
+  "version": "1.0.0",
+  "description": "Telegram consultant with telegram bot api+commerce",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "author": "hbklksndr",
+  "license": "MIT"
+}
